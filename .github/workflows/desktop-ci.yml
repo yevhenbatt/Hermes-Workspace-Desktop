@@ -1,0 +1,37 @@
+name: Desktop CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Workflows in this repository do not need write access to the repository.
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify Desktop build
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Check native Tauri code
+        run: cargo check --manifest-path src-tauri/Cargo.toml
