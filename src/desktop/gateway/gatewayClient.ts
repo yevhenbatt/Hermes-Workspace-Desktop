@@ -6,9 +6,22 @@ export interface GatewayLoginData {
 
 export interface DesktopBootstrap {
   user: { id: string; username: string; isPlatformAdmin: boolean };
-  context: { organizationId: string | null; workspaceId: string | null; projectId: string | null; persisted: boolean };
-  organizationCount: number;
+  organizations: Array<{
+    id: string; name: string; slug: string; role: string;
+    workspaces: Array<{
+      id: string; name: string; slug: string;
+      projects: Array<{ id: string; name: string; slug: string; description: string | null; createdByUserId: string | null }>;
+    }>;
+  }>;
+  context: DesktopContext;
   capabilities: Record<string, boolean>;
+}
+
+export interface DesktopContext {
+  organizationId: string | null;
+  workspaceId: string | null;
+  projectId: string | null;
+  persisted: boolean;
 }
 
 export type LocalMaterialSourceType = 'obsidian_vault' | 'directory' | 'file';
@@ -62,6 +75,15 @@ export function loginToGateway(gatewayUrl: string, username: string, password: s
 export function getDesktopBootstrap(gatewayUrl: string, accessToken: string): Promise<DesktopBootstrap> {
   return request<DesktopBootstrap>(gatewayUrl, '/desktop/bootstrap', {
     headers: { authorization: `Bearer ${accessToken}` },
+  });
+}
+
+export function saveDesktopContext(gatewayUrl: string, accessToken: string, context: Pick<DesktopContext, 'organizationId' | 'workspaceId' | 'projectId'>): Promise<DesktopContext> {
+  if (!context.organizationId) throw new Error('Выберите организацию.');
+  return request<DesktopContext>(gatewayUrl, '/desktop/context', {
+    method: 'PUT',
+    headers: { authorization: `Bearer ${accessToken}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ organizationId: context.organizationId, workspaceId: context.workspaceId ?? undefined, projectId: context.projectId ?? undefined }),
   });
 }
 

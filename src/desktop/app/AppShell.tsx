@@ -7,8 +7,9 @@ import { N8nWorkflowDesigner } from '../components/n8n/N8nWorkflowDesigner';
 import { LlmProviderManager } from '../components/settings/LlmProviderManager';
 import { LocalMaterialsPanel } from '../components/materials/LocalMaterialsPanel';
 import { GatewayLogin, GatewaySession } from './GatewayLogin';
-import { getDesktopBootstrap } from '../gateway/gatewayClient';
+import { DesktopContext, getDesktopBootstrap } from '../gateway/gatewayClient';
 import { gatewaySessionStore } from '../gateway/gatewaySessionStore';
+import { DesktopContextSelector } from '../components/context/DesktopContextSelector';
 
 type NavigationTab = 'org' | 'knowledge' | 'materials' | 'n8n' | 'settings';
 
@@ -55,6 +56,10 @@ export const AppShell: React.FC = () => {
     setSession(null);
   };
 
+  const updateContext = (context: DesktopContext) => {
+    setSession((current) => current ? { ...current, bootstrap: { ...current.bootstrap, context } } : null);
+  };
+
   if (isRestoringSession) return <div className={styles.loadingScreen}>Проверяем сохранённую сессию Hermes…</div>;
   if (!session) return <GatewayLogin onAuthenticated={authenticate} />;
 
@@ -68,7 +73,7 @@ export const AppShell: React.FC = () => {
       <p className={styles.contextEyebrow}>КОНТЕКСТ GATEWAY</p>
       <h2>{session.bootstrap.user.username}</h2>
       <dl className={styles.contextList}>
-        <div><dt>Организаций</dt><dd>{session.bootstrap.organizationCount}</dd></div>
+        <div><dt>Организаций</dt><dd>{session.bootstrap.organizations.length}</dd></div>
         <div><dt>Workspace</dt><dd>{session.bootstrap.context.workspaceId ? 'Выбран' : 'Не выбран'}</dd></div>
         <div><dt>Проект</dt><dd>{session.bootstrap.context.projectId ? 'Выбран' : 'Не выбран'}</dd></div>
       </dl>
@@ -140,7 +145,8 @@ export const AppShell: React.FC = () => {
 
       <main className={styles.mainContent}>
         <header className={styles.sessionHeader}>
-          <span>{tabLabels[activeTab]}</span>
+          <span className={styles.tabLabel}>{tabLabels[activeTab]}</span>
+          <DesktopContextSelector bootstrap={session.bootstrap} gatewayUrl={session.gatewayUrl} accessToken={session.accessToken} onSaved={updateContext} />
           <button onClick={logout}>Выйти</button>
         </header>
         {activeTab === 'org' && <OrgChartViewer />}
