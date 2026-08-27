@@ -87,11 +87,13 @@
   top: 12px;
   right: 16px;
   display: flex;
-  gap: 10px;
-  align-items: center;
+  gap: 12px;
+  align-items: flex-start;
   color: #a1a1aa;
   font-size: 12px;
 }
+
+.tabLabel { padding-top: 7px; white-space: nowrap; }
 
 .sessionHeader button {
   padding: 6px 9px;
@@ -101,3 +103,5 @@
   background: #18181b;
   cursor: pointer;
 }
+
+@media (max-width: 900px) { .sessionHeader { left: 16px; flex-wrap: wrap; }.tabLabel { width: 100%; } }
