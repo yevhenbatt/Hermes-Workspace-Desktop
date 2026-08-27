@@ -1,0 +1,103 @@
+.appContainer {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: #09090b;
+  color: #f4f4f5;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.loadingScreen {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  color: #e4e4e7;
+  background: #09090b;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.leftNav {
+  width: 60px;
+  background-color: #121214;
+  border-right: 1px solid #27272a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 16px;
+  gap: 16px;
+}
+
+.navIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background-color: #18181b;
+  color: #a1a1aa;
+  border: 1px solid #27272a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.navIcon:hover {
+  background-color: #27272a;
+  color: #f4f4f5;
+}
+
+.navActive {
+  background-color: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+.mainContent {
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.focusContent { flex: 1; min-width: 0; height: 100%; }
+
+.contextPanel {
+  width: 260px;
+  box-sizing: border-box;
+  padding: 18px;
+  color: #e4e4e7;
+  border-left: 1px solid #27272a;
+  background: #121214;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.contextEyebrow { margin: 0 0 8px; color: #60a5fa; font-size: 11px; font-weight: 700; letter-spacing: .08em; }
+.contextPanel h2 { margin: 0 0 18px; font-size: 16px; }
+.contextList { display: grid; gap: 12px; margin: 0; }
+.contextList div { display: flex; justify-content: space-between; gap: 12px; }
+.contextList dt { color: #a1a1aa; }.contextList dd { margin: 0; text-align: right; }
+.contextHint { margin: 24px 0 0; color: #a1a1aa; font-size: 12px; line-height: 1.5; }
+
+.sessionHeader {
+  position: absolute;
+  z-index: 2;
+  top: 12px;
+  right: 16px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: #a1a1aa;
+  font-size: 12px;
+}
+
+.sessionHeader button {
+  padding: 6px 9px;
+  color: #e4e4e7;
+  border: 1px solid #3f3f46;
+  border-radius: 6px;
+  background: #18181b;
+  cursor: pointer;
+}

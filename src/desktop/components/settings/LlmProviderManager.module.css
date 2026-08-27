@@ -1,0 +1,116 @@
+.container {
+  padding: 24px;
+  background-color: #121214;
+  color: #f4f4f5;
+  font-family: system-ui, -apple-system, sans-serif;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #a1a1aa;
+  font-size: 13px;
+  margin-bottom: 24px;
+}
+
+.section {
+  background-color: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.sectionTitle {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #60a5fa;
+}
+
+.providerGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background-color: #09090b;
+  border: 1px solid #27272a;
+  border-radius: 6px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.providerName {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.statusBadge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.statusConnected {
+  background-color: #059669;
+  color: #ecfdf5;
+}
+
+.statusDisconnected {
+  background-color: #3f3f46;
+  color: #a1a1aa;
+}
+
+.button {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.button:hover {
+  background-color: #1d4ed8;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inputLabel {
+  font-size: 12px;
+  color: #a1a1aa;
+}
+
+.input {
+  background-color: #18181b;
+  border: 1px solid #3f3f46;
+  color: white;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 13px;
+}

@@ -1,0 +1,128 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #09090b;
+  color: #f4f4f5;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background-color: #18181b;
+  border-bottom: 1px solid #27272a;
+}
+
+.titleGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.statusBadge {
+  background-color: #059669;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.button {
+  background-color: #27272a;
+  color: #f4f4f5;
+  border: 1px solid #3f3f46;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.buttonPrimary {
+  background-color: #2563eb;
+  border-color: #2563eb;
+  color: white;
+}
+
+.buttonPrimary:hover {
+  background-color: #1d4ed8;
+}
+
+.canvasArea {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background-size: 20px 20px;
+  background-image: radial-gradient(circle, #27272a 1px, transparent 1px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nodeList {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 40px;
+}
+
+.nodeCard {
+  background-color: #18181b;
+  border: 1px solid #3f3f46;
+  border-radius: 8px;
+  padding: 16px;
+  width: 220px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  position: relative;
+}
+
+.nodeCardAi {
+  border-color: #60a5fa;
+  box-shadow: 0 0 12px rgba(96, 165, 250, 0.2);
+}
+
+.nodeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.nodeName {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.nodeType {
+  font-size: 11px;
+  color: #a1a1aa;
+}
+
+.nodeAction {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.deleteButton {
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-size: 11px;
+  cursor: pointer;
+}
