@@ -39,6 +39,8 @@ export interface LocalMaterialSource {
 
 interface GatewayEnvelope<T> { success: boolean; data: T; }
 
+export { request as requestGateway };
+
 export class GatewayRequestError extends Error {
   public constructor(public readonly status: number, message: string) {
     super(message);

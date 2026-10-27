@@ -1,170 +1,85 @@
-import React, { useState } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { canManageProviderConnection, type ProviderConnection } from '../../gateway/providerConnectionClient';
+import { useProviderConnections } from './useProviderConnections';
 import styles from './LlmProviderManager.module.css';
-import { LlmProviderConfig } from '../../types/workspace';
-import { hostAdapter } from '../../adapters/hostAdapter';
 
-export const LlmProviderManager: React.FC = () => {
-  const [providers, setProviders] = useState<LlmProviderConfig[]>([
-    {
-      id: 'chatgpt',
-      name: 'ChatGPT / OpenAI',
-      type: 'chatgpt',
-      authType: 'oauth',
-      isAuthenticated: true,
-      selectedModel: 'gpt-4o',
-    },
-    {
-      id: 'claude',
-      name: 'Claude / Anthropic',
-      type: 'claude',
-      authType: 'oauth',
-      isAuthenticated: false,
-      selectedModel: 'claude-3-5-sonnet',
-    },
-    {
-      id: 'gemini',
-      name: 'Google Gemini',
-      type: 'gemini',
-      authType: 'oauth',
-      isAuthenticated: false,
-      selectedModel: 'gemini-1.5-pro',
-    },
-    {
-      id: 'openrouter',
-      name: 'OpenRouter.ai',
-      type: 'openrouter',
-      authType: 'api_key',
-      isAuthenticated: false,
-      baseUrl: 'https://openrouter.ai/api/v1',
-      selectedModel: 'auto',
-    },
-    {
-      id: 'freellmapi',
-      name: 'FreeLLMAPI',
-      type: 'freellmapi',
-      authType: 'api_key',
-      isAuthenticated: false,
-      selectedModel: 'default',
-    },
-    {
-      id: 'omniroute',
-      name: 'OmniRoute Gateway',
-      type: 'omniroute',
-      authType: 'api_key',
-      isAuthenticated: false,
-      selectedModel: 'default',
-    },
-    {
-      id: 'ollama',
-      name: 'Ollama Local Host',
-      type: 'ollama',
-      authType: 'api_key',
-      isAuthenticated: true,
-      baseUrl: 'http://localhost:11434',
-      selectedModel: 'llama3:latest',
-    },
-  ]);
+interface LlmProviderManagerProps {
+  gatewayUrl: string;
+  accessToken: string;
+  userId: string;
+}
 
-  const [apiKeyInput, setApiKeyInput] = useState<Record<string, string>>({});
+export const LlmProviderManager = ({ gatewayUrl, accessToken, userId }: LlmProviderManagerProps) => {
+  const state = useProviderConnections(gatewayUrl, accessToken, userId);
+  const [displayName, setDisplayName] = useState('');
+  const [revokeTarget, setRevokeTarget] = useState<ProviderConnection | null>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const isBusy = state.pendingAction !== null;
 
-  const handleOAuthLogin = async (providerId: string) => {
-    try {
-      await hostAdapter.invokeIpc('initiate_oauth', { providerId });
-      setProviders((prev) =>
-        prev.map((p) => (p.id === providerId ? { ...p, isAuthenticated: true } : p))
-      );
-    } catch (err) {
-      console.error(`[LlmProviderManager] OAuth Error:`, err);
-    }
+  useEffect(() => {
+    if (revokeTarget) dialogRef.current?.showModal();
+  }, [revokeTarget]);
+
+  const handleCreate = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (await state.create(displayName)) setDisplayName('');
   };
 
-  const handleSaveApiKey = async (providerId: string) => {
-    const key = apiKeyInput[providerId];
-    if (!key) return;
-
-    try {
-      // The old mock wrote secrets through an unrestricted IPC command. Provider
-      // credentials remain disabled until the dedicated OS-keychain slice exists.
-      throw new Error('Сохранение ключей будет доступно после подключения системного keychain.');
-    } catch (err) {
-      console.error(`[LlmProviderManager] Key Save Error:`, err);
-    }
+  const handleRevoke = async () => {
+    if (revokeTarget && await state.revoke(revokeTarget)) setRevokeTarget(null);
   };
 
   return (
-    <div className={styles.container}>
-      <h1 className={styles.title}>LLM Provider & OAuth Settings</h1>
-      <p className={styles.subtitle}>
-        Единый интерфейс управления моделями для Hermes Agent и SwarmClaw
-      </p>
-
+    <section className={styles.container} aria-busy={isBusy}>
+      <h1 className={styles.title}>Provider connections</h1>
+      <p className={styles.subtitle}>Manage subscriptions through Workspace Gateway. Provider credentials stay on the server.</p>
       <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>OAuth 2.0 Авторизация</h2>
-        <div className={styles.providerGrid}>
-          {providers
-            .filter((p) => p.authType === 'oauth')
-            .map((p) => (
-              <div key={p.id} className={styles.card}>
-                <div className={styles.cardHeader}>
-                  <span className={styles.providerName}>{p.name}</span>
-                  <span
-                    className={`${styles.statusBadge} ${
-                      p.isAuthenticated ? styles.statusConnected : styles.statusDisconnected
-                    }`}
-                  >
-                    {p.isAuthenticated ? 'Авторизован' : 'Не подключен'}
-                  </span>
-                </div>
-                <button
-                  className={styles.button}
-                  onClick={() => handleOAuthLogin(p.id)}
-                >
-                  {p.isAuthenticated ? 'Переподключить OAuth' : 'Войти через OAuth 2.0'}
-                </button>
-              </div>
-            ))}
-        </div>
+        <h2 className={styles.sectionTitle}>Add a Codex connection</h2>
+        <p className={styles.subtitle}>OAuth sign-in from this app is not available yet. Complete ChatGPT sign-in on the server, then check the login here. Creating a connection does not sign you in.</p>
+        <form className={styles.inputGroup} onSubmit={handleCreate}>
+          <label className={styles.inputLabel} htmlFor="provider-connection-name">Connection name</label>
+          <input id="provider-connection-name" className={styles.input} value={displayName} onChange={(event) => setDisplayName(event.target.value)} minLength={3} maxLength={120} required disabled={isBusy} placeholder="Personal Codex" />
+          <button className={styles.button} type="submit" disabled={isBusy || displayName.trim().length < 3}>{state.pendingAction === 'create' ? 'Creating…' : 'Create connection'}</button>
+        </form>
       </div>
-
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>API Key & Custom Endpoints</h2>
-        <div className={styles.providerGrid}>
-          {providers
-            .filter((p) => p.authType === 'api_key')
-            .map((p) => (
-              <div key={p.id} className={styles.card}>
-                <div className={styles.cardHeader}>
-                  <span className={styles.providerName}>{p.name}</span>
-                  <span
-                    className={`${styles.statusBadge} ${
-                      p.isAuthenticated ? styles.statusConnected : styles.statusDisconnected
-                    }`}
-                  >
-                    {p.isAuthenticated ? 'Активен' : 'Требует API Key'}
-                  </span>
-                </div>
-                <div className={styles.inputGroup}>
-                  <label className={styles.inputLabel}>API Key / Token</label>
-                  <input
-                    type="password"
-                    className={styles.input}
-                    placeholder="sk-..."
-                    value={apiKeyInput[p.id] || ''}
-                    onChange={(e) =>
-                      setApiKeyInput({ ...apiKeyInput, [p.id]: e.target.value })
-                    }
-                  />
-                </div>
-                <button
-                  className={styles.button}
-                  onClick={() => handleSaveApiKey(p.id)}
-                >
-                  Сохранить ключ
-                </button>
-              </div>
-            ))}
-        </div>
+      {state.error && <p className={styles.error} role="alert">{state.error}</p>}
+      {state.notice && <p className={styles.notice} role="status">{state.notice}</p>}
+      <div className={styles.cardHeader}>
+        <h2 className={styles.sectionTitle}>Available connections</h2>
+        <button className={styles.button} disabled={isBusy} onClick={() => void state.refresh()}>Refresh</button>
       </div>
-    </div>
+      {state.isLoading && <p role="status">Loading connections…</p>}
+      {!state.isLoading && !state.error && state.connections.length === 0 && <p>No provider connections yet.</p>}
+      <div className={styles.providerGrid}>
+        {state.connections.map((connection) => {
+          const canManage = canManageProviderConnection(connection, userId);
+          return (
+            <article className={styles.card} key={connection.id}>
+              <div className={styles.cardHeader}>
+                <h3 className={styles.providerName}>{connection.displayName}</h3>
+                <span className={`${styles.statusBadge} ${connection.status === 'active' ? styles.statusConnected : styles.statusDisconnected}`}>{connection.status}</span>
+              </div>
+              <p>{connection.provider} · {connection.access === 'owner' ? 'Owned by you' : 'Shared with you'}</p>
+              <code className={styles.identifier}>{connection.id}</code>
+              <p className={styles.subtitle}>{connection.canUse ? 'Available for authorized tasks.' : 'Not available for tasks.'}</p>
+              {canManage && <div className={styles.actions}>
+                {connection.provider === 'codex' && <button className={styles.button} disabled={isBusy} onClick={() => void state.verify(connection)}>{state.pendingAction === `verify:${connection.id}` ? 'Checking…' : 'Check OAuth login'}</button>}
+                <button className={`${styles.button} ${styles.danger}`} disabled={isBusy} onClick={() => setRevokeTarget(connection)}>Revoke</button>
+              </div>}
+              {connection.access === 'granted' && <p className={styles.subtitle}>Only the owner can verify or revoke this connection.</p>}
+            </article>
+          );
+        })}
+      </div>
+      {revokeTarget && <dialog ref={dialogRef} className={styles.dialog} aria-labelledby="revoke-title" onCancel={(event) => { if (isBusy) event.preventDefault(); else setRevokeTarget(null); }}>
+        <h2 id="revoke-title">Revoke {revokeTarget.displayName}?</h2>
+        <p>This stops future use through Gateway and revokes shared grants. It does not delete the OAuth login on the server or stop existing tasks.</p>
+        {state.error && <p className={styles.error} role="alert">{state.error}</p>}
+        <div className={styles.actions}>
+          <button className={styles.button} autoFocus disabled={isBusy} onClick={() => setRevokeTarget(null)}>Cancel</button>
+          <button className={`${styles.button} ${styles.danger}`} disabled={isBusy} onClick={() => void handleRevoke()}>{isBusy ? 'Revoking…' : 'Confirm revoke'}</button>
+        </div>
+      </dialog>}
+    </section>
   );
 };

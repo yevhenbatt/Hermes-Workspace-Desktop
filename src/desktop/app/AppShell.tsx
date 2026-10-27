@@ -153,7 +153,7 @@ export const AppShell: React.FC = () => {
         {activeTab === 'knowledge' && <KnowledgeExplorer />}
         {activeTab === 'materials' && <LocalMaterialsPanel gatewayUrl={session.gatewayUrl} accessToken={session.accessToken} />}
         {activeTab === 'n8n' && <N8nWorkflowDesigner />}
-        {activeTab === 'settings' && <LlmProviderManager />}
+        {activeTab === 'settings' && <LlmProviderManager key={`${session.bootstrap.user.id}:${session.gatewayUrl}`} gatewayUrl={session.gatewayUrl} accessToken={session.accessToken} userId={session.bootstrap.user.id} />}
       </main>
 
       <HermesCopilotDrawer onToggleFocus={() => setIsHermesFocus(true)} />
