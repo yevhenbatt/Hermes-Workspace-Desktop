@@ -1,104 +1,57 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useAgentTask } from './useAgentTask';
 import styles from './HermesCopilotDrawer.module.css';
 
-export interface ChatMessage {
-  id: string;
-  sender: 'user' | 'assistant';
-  content: string;
-  reasoningTrace?: string;
-  timestamp: string;
-}
-
 export interface HermesCopilotDrawerProps {
-  onSendMessage?: (message: string, model: string) => Promise<void>;
+  task: ReturnType<typeof useAgentTask>;
+  hasWorkspace: boolean;
   layout?: 'docked' | 'focus';
   onToggleFocus?: () => void;
 }
 
-export const HermesCopilotDrawer: React.FC<HermesCopilotDrawerProps> = ({
-  onSendMessage,
-  layout = 'docked',
-  onToggleFocus,
-}) => {
+export const HermesCopilotDrawer = ({ task, hasWorkspace, layout = 'docked', onToggleFocus }: HermesCopilotDrawerProps) => {
   const [input, setInput] = useState('');
-  const [selectedModel, setSelectedModel] = useState('hermes-3-llama-3.1-70b');
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: '1',
-      sender: 'assistant',
-      content: 'Привет! Я Hermes C-Level Agent. Чем я могу помочь проекту?',
-      reasoningTrace: 'Инициализация контекста Hermes Workspace...',
-      timestamp: new Date().toLocaleTimeString(),
-    },
-  ]);
-
   const handleSend = async () => {
-    if (!input.trim()) return;
-
-    const userMsg: ChatMessage = {
-      id: Date.now().toString(),
-      sender: 'user',
-      content: input,
-      timestamp: new Date().toLocaleTimeString(),
-    };
-
-    setMessages((prev) => [...prev, userMsg]);
-    const currentInput = input;
-    setInput('');
-
-    if (onSendMessage) await onSendMessage(currentInput, selectedModel);
+    if (!input.trim() || input.length > 12000) return;
+    const submitted = await task.send(input);
+    if (submitted) setInput('');
   };
-
   return (
     <div className={`${styles.drawerContainer} ${layout === 'focus' ? styles.focus : ''}`}>
       <div className={styles.header}>
-        <span className={styles.headerTitle}>Hermes Co-Pilot</span>
+        <span className={styles.headerTitle}>Hermes</span>
         <div className={styles.headerActions}>
-          <select className={styles.modelSelect} value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)}>
-            <option value="gateway-agent">Gateway Agent (soon)</option>
-          </select>
-          {onToggleFocus && <button className={styles.focusButton} onClick={onToggleFocus}>
-            {layout === 'focus' ? 'Свернуть' : 'Развернуть'}
-          </button>}
+          {onToggleFocus && <button className={styles.focusButton} onClick={onToggleFocus}>{layout === 'focus' ? 'Minimize' : 'Expand'}</button>}
         </div>
       </div>
-
-      {!onSendMessage && <p className={styles.integrationNotice}>
-        Agent Task API ещё не подключён. Это реальный Gateway-контекст, но отправка команд пока отключена.
-      </p>}
-
-      <div className={styles.chatHistory}>
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`${styles.messageBubble} ${
-              msg.sender === 'user' ? styles.userMessage : styles.assistantMessage
-            }`}
-          >
-            {msg.reasoningTrace && (
-              <div className={styles.reasoningBlock}>{msg.reasoningTrace}</div>
-            )}
-            <div>{msg.content}</div>
-          </div>
-        ))}
+      <div className={styles.integrationNotice}>
+        Each message starts a separate task. This is not yet a persistent conversation. Tasks may use agent tools and your selected subscription.
       </div>
-
+      <label className={styles.providerLabel}>
+        Provider connection
+        <select className={styles.modelSelect} value={task.selectedConnectionId} disabled={task.busy} onChange={(event) => task.setSelectedConnectionId(event.target.value)}>
+          <option value="">Select connection</option>
+          {task.connections.map((connection) => <option key={connection.id} value={connection.id}>{connection.displayName} ({connection.provider})</option>)}
+        </select>
+      </label>
+      {!hasWorkspace && <p className={styles.integrationNotice}>Select an organization and workspace before sending a task.</p>}
+      {task.error && <p className={styles.integrationNotice} role="alert">{task.error}</p>}
+      <div className={styles.chatHistory}>
+        {task.messages.map((message) => <div key={message.id}>
+          <div className={`${styles.messageBubble} ${styles.userMessage}`}>{message.input}</div>
+          {message.task && <div className={`${styles.messageBubble} ${styles.assistantMessage}`}>
+            <div>Task: {message.task.status} · {message.task.id}</div>
+            {message.task.remoteAvailable === false && <div role="status">Executor unavailable. This status may be outdated.</div>}
+            {message.task.output && <div className={styles.taskText}>{message.task.output}</div>}
+            {message.task.error && <div role="alert" className={styles.taskText}>{message.task.error}</div>}
+          </div>}
+          {message.error && <p className={styles.integrationNotice} role="alert">{message.error}</p>}
+        </div>)}
+      </div>
       <div className={styles.inputArea}>
-        <textarea
-          className={styles.textarea}
-          placeholder="Спросить Hermes Agent или отдать команду..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleSend();
-            }
-          }}
-        />
-        <button className={styles.sendButton} onClick={handleSend} disabled={!onSendMessage}>
-          Отправить
-        </button>
+        <textarea className={styles.textarea} placeholder="Send a task..." value={input} maxLength={12000} onChange={(event) => setInput(event.target.value)}
+          onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); void handleSend(); } }} />
+        <button className={styles.sendButton} onClick={() => void handleSend()} disabled={task.busy || !hasWorkspace || !task.selectedConnectionId || !input.trim()}>{task.busy ? 'Running…' : 'Send'}</button>
       </div>
     </div>
   );
