@@ -10,6 +10,9 @@ import { GatewayLogin, GatewaySession } from './GatewayLogin';
 import { DesktopContext, getDesktopBootstrap } from '../gateway/gatewayClient';
 import { gatewaySessionStore } from '../gateway/gatewaySessionStore';
 import { DesktopContextSelector } from '../components/context/DesktopContextSelector';
+import { useAgentTask } from '../components/copilot/useAgentTask';
+
+const emptyContext: DesktopContext = { organizationId: null, workspaceId: null, projectId: null, persisted: false };
 
 type NavigationTab = 'org' | 'knowledge' | 'materials' | 'n8n' | 'settings';
 
@@ -26,6 +29,7 @@ export const AppShell: React.FC = () => {
   const [isRestoringSession, setIsRestoringSession] = useState(true);
   const [activeTab, setActiveTab] = useState<NavigationTab>('org');
   const [isHermesFocus, setIsHermesFocus] = useState(false);
+  const agentTask = useAgentTask(session?.gatewayUrl ?? '', session?.accessToken ?? '', session?.bootstrap.context ?? emptyContext);
 
   useEffect(() => {
     const restoreSession = async () => {
@@ -88,7 +92,7 @@ export const AppShell: React.FC = () => {
           <button className={`${styles.navIcon} ${styles.navActive}`} onClick={() => setIsHermesFocus(false)} title="Вернуться к рабочему разделу">🤖</button>
         </nav>
         <main className={styles.focusContent}>
-          <HermesCopilotDrawer layout="focus" onToggleFocus={() => setIsHermesFocus(false)} />
+          <HermesCopilotDrawer layout="focus" task={agentTask} hasWorkspace={Boolean(session.bootstrap.context.workspaceId)} onToggleFocus={() => setIsHermesFocus(false)} />
         </main>
         {contextPanel}
       </div>
@@ -156,7 +160,7 @@ export const AppShell: React.FC = () => {
         {activeTab === 'settings' && <LlmProviderManager key={`${session.bootstrap.user.id}:${session.gatewayUrl}`} gatewayUrl={session.gatewayUrl} accessToken={session.accessToken} userId={session.bootstrap.user.id} />}
       </main>
 
-      <HermesCopilotDrawer onToggleFocus={() => setIsHermesFocus(true)} />
+      <HermesCopilotDrawer task={agentTask} hasWorkspace={Boolean(session.bootstrap.context.workspaceId)} onToggleFocus={() => setIsHermesFocus(true)} />
     </div>
   );
 };
